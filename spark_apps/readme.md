@@ -1,0 +1,1 @@
+# Criação de imagens spark para serem instanciadas no sparkOperator do kubernetes
