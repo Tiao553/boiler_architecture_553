@@ -1,0 +1,54 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: spark-cluster-cr
+  labels:
+    rbac.authorization.kubeflow.org/aggregate-to-kubeflow-edit: "true"
+rules:
+  - apiGroups:
+      - sparkoperator.k8s.io
+    resources:
+      - sparkapplications
+    verbs:
+      - '*'
+---
+# Allow airflow-worker service account access for spark-on-k8s
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: airflow-spark-crb
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: spark-cluster-cr
+subjects:
+  - kind: ServiceAccount
+    name: airflow-worker
+    namespace: airflow
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: airflow-worker-binding
+  namespace: processing
+subjects:
+- kind: ServiceAccount
+  name: airflow-worker
+  namespace: airflow
+roleRef:
+  kind: Role
+  name: pod-create-delete
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pod-create-delete
+  namespace: processing
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]
